@@ -16,6 +16,8 @@ import {
   formatTimePickerDate,
   getUniqueValuesForRawAggs,
   updateDataFrameMeta,
+  getRawDataSource,
+  removeRawDataSourceFromQs,
 } from '../../../../src/plugins/data/common';
 import {
   DataPublicPluginStart,
@@ -53,7 +55,12 @@ export class PPLSearchInterceptor extends SearchInterceptor {
     const { fromDate, toDate } = formatTimePickerDate(dateRange, 'YYYY-MM-DD HH:mm:ss.SSS');
 
     const fetchDataFrame = (queryString: string, df = null) => {
-      const body = stringify({ query: { qs: queryString, format: 'jdbc' }, df });
+      const rawDataSource = getRawDataSource(queryString);
+      const body = stringify({
+        query: { qs: removeRawDataSourceFromQs(queryString), format: 'jdbc' },
+        df,
+        ...(rawDataSource ? { dataSourceId: rawDataSource } : {}),
+      });
       return from(
         this.deps.http.fetch({
           method: 'POST',

@@ -9,25 +9,32 @@ import { shimSchemaRow, shimStats } from '.';
 
 export class Facet {
   constructor(
-    private client: any,
+    private defaultClient: any,
     private logger: Logger,
     private endpoint: string,
     private shimResponse: boolean = false
   ) {
-    this.client = client;
+    this.defaultClient = defaultClient;
     this.logger = logger;
     this.endpoint = endpoint;
     this.shimResponse = shimResponse;
   }
 
-  protected fetch = async (request: any, endpoint: string): Promise<FacetResponse> => {
+  protected fetch = async (
+    context: any,
+    request: any,
+    endpoint: string
+  ): Promise<FacetResponse> => {
     try {
-      const { query, format } = request.body;
+      const { query, format, dataSourceId } = request.body;
       const params = {
         body: { query },
         ...(format !== 'jdbc' && { format }),
       };
-      const queryRes = await this.client.asScoped(request).callAsCurrentUser(endpoint, params);
+      const client = dataSourceId
+        ? await context.dataSource.opensearch.getClient(dataSourceId)
+        : this.defaultClient;
+      const queryRes = await client.asScoped(request).callAsCurrentUser(endpoint, params);
       return {
         success: true,
         data: queryRes,
@@ -41,8 +48,8 @@ export class Facet {
     }
   };
 
-  public describeQuery = async (request: any): Promise<FacetResponse> => {
-    const response = await this.fetch(request, this.endpoint);
+  public describeQuery = async (context: any, request: any): Promise<FacetResponse> => {
+    const response = await this.fetch(context, request, this.endpoint);
     if (!this.shimResponse) return response;
 
     const { format: dataType } = request.body;

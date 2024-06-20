@@ -78,7 +78,7 @@ export const pplSearchStrategyProvider = (
           !schema || dataFrameHydrationStrategy === 'perQuery'
             ? `source=${source} | head`
             : requestParams.search;
-        const rawResponse: any = await pplFacet.describeQuery(request);
+        const rawResponse: any = await pplFacet.describeQuery(context, request);
         if (!rawResponse.success) {
           return {
             type: 'data_frame',
@@ -103,7 +103,7 @@ export const pplSearchStrategyProvider = (
             const aggRequest = parseRequest(aggQueryString as string);
             const query = aggRequest.aggs;
             request.body.query = query;
-            const rawAggs: any = await pplFacet.describeQuery(request);
+            const rawAggs: any = await pplFacet.describeQuery(context, request);
             (dataFrame as IDataFrameWithAggs).aggs = {};
             (dataFrame as IDataFrameWithAggs).aggs[key] = rawAggs.data.datarows?.map((hit: any) => {
               return {

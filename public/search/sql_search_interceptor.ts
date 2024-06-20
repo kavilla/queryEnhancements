@@ -15,6 +15,7 @@ import {
   SearchInterceptor,
   SearchInterceptorDeps,
 } from '../../../../src/plugins/data/public';
+import { getRawDataSource, removeRawDataSourceFromQs } from '../../../../src/plugins/data/common';
 import { API, SEARCH_STRATEGY } from '../../common';
 import { QueryEnhancementsPluginStartDependencies } from '../types';
 
@@ -40,7 +41,12 @@ export class SQLSearchInterceptor extends SearchInterceptor {
     const path = trimEnd(API.SQL_SEARCH);
 
     const fetchDataFrame = (queryString: string, df = null) => {
-      const body = stringify({ query: { qs: queryString, format: 'jdbc' }, df });
+      const rawDataSource = getRawDataSource(queryString);
+      const body = stringify({
+        query: { qs: removeRawDataSourceFromQs(queryString), format: 'jdbc' },
+        df,
+        ...(rawDataSource ? { dataSourceId: rawDataSource } : {}),
+      });
       return from(
         this.deps.http.fetch({
           method: 'POST',
