@@ -10,6 +10,7 @@ import { configSchema, ConfigSchema } from '../common/config';
 export const config: PluginConfigDescriptor<ConfigSchema> = {
   exposeToBrowser: {
     queryAssist: true,
+    savedObjects: true,
   },
   schema: configSchema,
 };
