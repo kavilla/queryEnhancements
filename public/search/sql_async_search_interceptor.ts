@@ -43,7 +43,7 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
   protected runSearch(
     request: IOpenSearchDashboardsSearchRequest,
     signal?: AbortSignal,
-    strategy?: string
+    _strategy?: string
   ): Observable<IOpenSearchDashboardsSearchResponse> {
     const { id, ...searchRequest } = request;
     const path = trimEnd(API.SQL_ASYNC_SEARCH);
@@ -62,18 +62,23 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
       dataFrame.meta?.queryConfig?.formattedQs() ?? getRawQueryString(searchRequest) ?? '';
 
     const onPollingSuccess = (pollingResult: any) => {
-      if (pollingResult && pollingResult.body.meta.status === 'SUCCESS') {
-        return false;
-      }
-      if (pollingResult && pollingResult.body.meta.status === 'FAILED') {
-        const jsError = new Error(pollingResult.data.error.response);
-        this.deps.toasts.addError(jsError, {
-          title: i18n.translate('queryEnhancements.sqlQueryError', {
-            defaultMessage: 'Could not complete the SQL async query',
-          }),
-          toastMessage: pollingResult.data.error.response,
-        });
-        return false;
+      if (pollingResult) {
+        switch (pollingResult.body.meta.status) {
+          case 'SUCCESS':
+            return false;
+          case 'FAILED':
+            const jsError = new Error(pollingResult.data.error.response);
+            this.deps.toasts.addError(jsError, {
+              title: i18n.translate('queryEnhancements.sqlQueryError', {
+                defaultMessage: 'Could not complete the SQL async query',
+              }),
+              toastMessage: pollingResult.data.error.response,
+            });
+            return false;
+          default:
+            // TODO add event trigger
+            console.log("Firing progress: " + pollingResult.body.meta.status)
+        }
       }
 
       this.deps.toasts.addInfo({
