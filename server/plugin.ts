@@ -52,7 +52,7 @@ export class QueryEnhancementsPlugin
 
     data.search.registerSearchStrategy(SEARCH_STRATEGY.PPL, pplSearchStrategy);
     data.search.registerSearchStrategy(SEARCH_STRATEGY.SQL, sqlSearchStrategy);
-    data.search.registerSearchStrategy(SEARCH_STRATEGY.SQLAsync, sqlAsyncSearchStrategy);
+    data.search.registerSearchStrategy(SEARCH_STRATEGY.SQL_ASYNC, sqlAsyncSearchStrategy);
 
     core.http.registerRouteHandlerContext('query_assist', () => ({
       logger: this.logger,

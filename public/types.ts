@@ -4,6 +4,7 @@
  */
 
 import { DataPublicPluginSetup, DataPublicPluginStart } from 'src/plugins/data/public';
+import { UiActionsStart } from 'src/plugins/ui_actions/public';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface QueryEnhancementsPluginSetup {}
@@ -13,6 +14,7 @@ export interface QueryEnhancementsPluginStart {}
 
 export interface QueryEnhancementsPluginSetupDependencies {
   data: DataPublicPluginSetup;
+  uiActions: UiActionsStart;
 }
 
 export interface QueryEnhancementsPluginStartDependencies {

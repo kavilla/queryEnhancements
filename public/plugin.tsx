@@ -16,6 +16,9 @@ import {
   QueryEnhancementsPluginStart,
   QueryEnhancementsPluginStartDependencies,
 } from './types';
+import { Trigger } from 'src/plugins/ui_actions/public';
+import { ASYNC_TRIGGER_ID } from '../common';
+
 
 export type PublicConfig = Pick<ConfigSchema, 'queryAssist'>;
 
@@ -31,7 +34,7 @@ export class QueryEnhancementsPlugin
 
   public setup(
     core: CoreSetup,
-    { data }: QueryEnhancementsPluginSetupDependencies
+    { data, uiActions }: QueryEnhancementsPluginSetupDependencies
   ): QueryEnhancementsPluginSetup {
     const pplSearchInterceptor = new PPLSearchInterceptor({
       toasts: core.notifications.toasts,
@@ -39,6 +42,7 @@ export class QueryEnhancementsPlugin
       uiSettings: core.uiSettings,
       startServices: core.getStartServices(),
       usageCollector: data.search.usageCollector,
+      uiActions,
     });
 
     const sqlSearchInterceptor = new SQLSearchInterceptor({
@@ -47,6 +51,7 @@ export class QueryEnhancementsPlugin
       uiSettings: core.uiSettings,
       startServices: core.getStartServices(),
       usageCollector: data.search.usageCollector,
+      uiActions,
     });
 
     const sqlAsyncSearchInterceptor = new SQLAsyncSearchInterceptor({
@@ -55,6 +60,7 @@ export class QueryEnhancementsPlugin
       uiSettings: core.uiSettings,
       startServices: core.getStartServices(),
       usageCollector: data.search.usageCollector,
+      uiActions,
     });
 
     data.__enhance({
@@ -127,6 +133,11 @@ export class QueryEnhancementsPlugin
         queryEditorExtension: createQueryAssistExtension(core.http, this.config),
       },
     });
+
+    const ASYNC_TRIGGER: Trigger<typeof ASYNC_TRIGGER_ID> = {
+      id: ASYNC_TRIGGER_ID,
+    };
+    uiActions.registerTrigger(ASYNC_TRIGGER);
 
     return {};
   }

@@ -18,23 +18,28 @@ import {
 } from '../../../../src/plugins/data/common';
 import {
   API,
+  ASYNC_TRIGGER_ID,
   DataFramePolling,
   FetchDataFrameContext,
   SEARCH_STRATEGY,
+  SparkJobState,
   fetchDataFrame,
   fetchDataFramePolling,
 } from '../../common';
 import { QueryEnhancementsPluginStartDependencies } from '../types';
+import { UiActionsStart } from 'src/plugins/ui_actions/public';
 
 export class SQLAsyncSearchInterceptor extends SearchInterceptor {
   protected queryService!: DataPublicPluginStart['query'];
   protected aggsService!: DataPublicPluginStart['search']['aggs'];
   protected dataFrame$ = new BehaviorSubject<IDataFrameResponse | undefined>(undefined);
+  protected uiActions: UiActionsStart;
 
   constructor(deps: SearchInterceptorDeps) {
     super(deps);
+    this.uiActions = deps.uiActions;
 
-    deps.startServices.then(([coreStart, depsStart]) => {
+    deps.startServices.then(([_coreStart, depsStart]) => {
       this.queryService = (depsStart as QueryEnhancementsPluginStartDependencies).data.query;
       this.aggsService = (depsStart as QueryEnhancementsPluginStartDependencies).data.search.aggs;
     });
@@ -63,10 +68,12 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
 
     const onPollingSuccess = (pollingResult: any) => {
       if (pollingResult) {
-        switch (pollingResult.body.meta.status) {
-          case 'SUCCESS':
+        const statusStr: string = (pollingResult.body.meta.status as string).toUpperCase();
+        const status = SparkJobState[statusStr as keyof typeof SparkJobState];
+        switch (status) {
+          case SparkJobState.SUCCESS:
             return false;
-          case 'FAILED':
+          case SparkJobState.FAILED:
             const jsError = new Error(pollingResult.data.error.response);
             this.deps.toasts.addError(jsError, {
               title: i18n.translate('queryEnhancements.sqlQueryError', {
@@ -76,8 +83,12 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
             });
             return false;
           default:
-            // TODO add event trigger
-            console.log("Firing progress: " + pollingResult.body.meta.status)
+            if (request.params?.progress_query_id) {
+              this.uiActions.getTrigger(ASYNC_TRIGGER_ID).exec({
+                query_id: request.params.progress_query_id,
+                query_status: status,
+              });
+            }
         }
       }
 
