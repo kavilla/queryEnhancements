@@ -7,7 +7,7 @@ import { act, render, screen } from '@testing-library/react';
 import React from 'react';
 import { coreMock } from '../../../../../src/core/public/mocks';
 import { IIndexPattern } from '../../../../../src/plugins/data/public';
-import { PublicConfig } from '../../plugin';
+import { ConfigSchema } from '../../../common/config';
 import { createQueryAssistExtension } from './create_extension';
 
 const coreSetupMock = coreMock.createSetup();
@@ -38,10 +38,8 @@ describe('CreateExtension', () => {
     jest.clearAllMocks();
   });
 
-  const config: PublicConfig = {
-    queryAssist: {
-      supportedLanguages: [{ language: 'PPL', agentConfig: 'os_query_assist_ppl' }],
-    },
+  const config: ConfigSchema['queryAssist'] = {
+    supportedLanguages: [{ language: 'PPL', agentConfig: 'os_query_assist_ppl' }],
   };
 
   it('should be enabled if at least one language is configured', async () => {
