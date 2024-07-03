@@ -1,7 +1,13 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { trimEnd } from 'lodash';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { i18n } from '@osd/i18n';
 import { concatMap, map } from 'rxjs/operators';
+import { UiActionsStart } from 'src/plugins/ui_actions/public';
 import {
   DATA_FRAME_TYPES,
   DataPublicPluginStart,
@@ -27,15 +33,19 @@ import {
   fetchDataFramePolling,
 } from '../../common';
 import { QueryEnhancementsPluginStartDependencies } from '../types';
-import { UiActionsStart } from 'src/plugins/ui_actions/public';
+import { ConnectionsService } from '../data_source_connection';
 
 export class SQLAsyncSearchInterceptor extends SearchInterceptor {
   protected queryService!: DataPublicPluginStart['query'];
   protected aggsService!: DataPublicPluginStart['search']['aggs'];
+  protected indexPatterns!: DataPublicPluginStart['indexPatterns'];
   protected dataFrame$ = new BehaviorSubject<IDataFrameResponse | undefined>(undefined);
   protected uiActions: UiActionsStart;
 
-  constructor(deps: SearchInterceptorDeps) {
+  constructor(
+    deps: SearchInterceptorDeps,
+    private readonly connectionsService: ConnectionsService
+  ) {
     super(deps);
     this.uiActions = deps.uiActions;
 
@@ -65,6 +75,16 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
 
     const queryString =
       dataFrame.meta?.queryConfig?.formattedQs() ?? getRawQueryString(searchRequest) ?? '';
+
+    dataFrame.meta = {
+      ...dataFrame.meta,
+      queryConfig: {
+        ...dataFrame.meta.queryConfig,
+        ...(this.connectionsService.getSelectedConnection() && {
+          dataSourceId: this.connectionsService.getSelectedConnection()?.id,
+        }),
+      },
+    };
 
     const onPollingSuccess = (pollingResult: any) => {
       if (pollingResult) {

@@ -9,12 +9,10 @@ import { getMdsDataSourceId } from '.';
 import { QueryEditorExtensionConfig } from '../../../../../src/plugins/data/public/ui/query_editor';
 import { QueryEditorExtensionDependencies } from '../../../../../src/plugins/data/public/ui/query_editor/query_editor_extensions/query_editor_extension';
 import { API } from '../../../common';
-import { PublicConfig } from '../../plugin';
+import { ConfigSchema } from '../../../common/config';
 import { getData } from '../../services';
 import { QueryAssistBar } from '../components';
 import { QueryAssistBanner } from '../components/query_assist_banner';
-
-let availableLanguagesByDataSource: Map<string | undefined, string[]>;
 
 /**
  * @param dependencies - QueryEditorExtensionDependencies.
@@ -23,11 +21,10 @@ let availableLanguagesByDataSource: Map<string | undefined, string[]>;
  * associated with the currently selected index pattern.
  */
 const getAvailableLanguages = async (
+  availableLanguagesByDataSource: Map<string | undefined, string[]>,
   dependencies: QueryEditorExtensionDependencies,
   http: HttpSetup
 ) => {
-  if (!availableLanguagesByDataSource) availableLanguagesByDataSource = new Map();
-
   const dataSourceId = await getMdsDataSourceId(
     getData().indexPatterns,
     dependencies.indexPatterns?.at(0)
@@ -47,8 +44,10 @@ const getAvailableLanguages = async (
 
 export const createQueryAssistExtension = (
   http: HttpSetup,
-  config: PublicConfig
+  config: ConfigSchema['queryAssist']
 ): QueryEditorExtensionConfig => {
+  const availableLanguagesByDataSource: Map<string | undefined, string[]> = new Map();
+
   return {
     id: 'query-assist',
     order: 1000,
@@ -57,13 +56,21 @@ export const createQueryAssistExtension = (
       // mappings, non-default data source types are not supported
       if (dependencies.dataSource && dependencies.dataSource?.getType() !== 'default') return false;
 
-      const languages = await getAvailableLanguages(dependencies, http);
+      const languages = await getAvailableLanguages(
+        availableLanguagesByDataSource,
+        dependencies,
+        http
+      );
       return languages.length > 0;
     },
     getComponent: (dependencies) => {
       // only show the component if user is on a supported language.
       return (
-        <QueryAssistWrapper dependencies={dependencies} http={http}>
+        <QueryAssistWrapper
+          availableLanguagesByDataSource={availableLanguagesByDataSource}
+          dependencies={dependencies}
+          http={http}
+        >
           <QueryAssistBar dependencies={dependencies} />
         </QueryAssistWrapper>
       );
@@ -71,10 +78,13 @@ export const createQueryAssistExtension = (
     getBanner: (dependencies) => {
       // advertise query assist if user is not on a supported language.
       return (
-        <QueryAssistWrapper dependencies={dependencies} http={http} invert>
-          <QueryAssistBanner
-            languages={config.queryAssist.supportedLanguages.map((conf) => conf.language)}
-          />
+        <QueryAssistWrapper
+          availableLanguagesByDataSource={availableLanguagesByDataSource}
+          dependencies={dependencies}
+          http={http}
+          invert
+        >
+          <QueryAssistBanner languages={config.supportedLanguages.map((conf) => conf.language)} />
         </QueryAssistWrapper>
       );
     },
@@ -82,6 +92,7 @@ export const createQueryAssistExtension = (
 };
 
 interface QueryAssistWrapperProps {
+  availableLanguagesByDataSource: Map<string | undefined, string[]>;
   dependencies: QueryEditorExtensionDependencies;
   http: HttpSetup;
   invert?: boolean;
@@ -94,9 +105,13 @@ const QueryAssistWrapper: React.FC<QueryAssistWrapperProps> = (props) => {
     let mounted = true;
 
     (async () => {
-      const available = (await getAvailableLanguages(props.dependencies, props.http)).includes(
-        props.dependencies.language
-      );
+      const available = (
+        await getAvailableLanguages(
+          props.availableLanguagesByDataSource,
+          props.dependencies,
+          props.http
+        )
+      ).includes(props.dependencies.language);
       if (mounted) setVisible(props.invert ? !available : available);
     })();
 
