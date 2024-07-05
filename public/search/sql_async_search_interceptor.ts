@@ -28,9 +28,10 @@ import {
   DataFramePolling,
   FetchDataFrameContext,
   SEARCH_STRATEGY,
-  SparkJobState,
+  JobState,
   fetchDataFrame,
   fetchDataFramePolling,
+  parseJobState,
 } from '../../common';
 import { QueryEnhancementsPluginStartDependencies } from '../types';
 import { ConnectionsService } from '../data_source_connection';
@@ -88,12 +89,11 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
 
     const onPollingSuccess = (pollingResult: any) => {
       if (pollingResult) {
-        const statusStr: string = (pollingResult.body.meta.status as string).toUpperCase();
-        const status = SparkJobState[statusStr as keyof typeof SparkJobState];
+        const status = parseJobState(pollingResult.body.meta.status);
         switch (status) {
-          case SparkJobState.SUCCESS:
+          case JobState.SUCCESS:
             return false;
-          case SparkJobState.FAILED:
+          case JobState.FAILED:
             const jsError = new Error(pollingResult.data.error.response);
             this.deps.toasts.addError(jsError, {
               title: i18n.translate('queryEnhancements.sqlQueryError', {

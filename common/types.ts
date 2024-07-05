@@ -15,21 +15,39 @@ export interface FetchDataFrameContext {
 
 export type FetchFunction<T, P = void> = (params?: P) => Observable<T>;
 
-// ref: https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/job-states.html
-export enum SparkJobState {
-  SUBMITTED,
-  PENDING,
-  SCHEDULED,
-  RUNNING,
-  FAILED,
-  SUCCESS,
-  CANCELLING,
-  CANCELLED,
+/**
+ * Job states are defined for compatibility with EMR job run states, but aren't strictly limited to
+ * that use. See also: {@link parseJobState}.
+ */
+export enum JobState {
+  SUBMITTED = 'SUBMITTED',
+  PENDING = 'PENDING',
+  SCHEDULED = 'SCHEDULING',
+  RUNNING = 'RUNNING',
+  FAILED = 'FAILED',
+  SUCCESS = 'SUCCESS',
+  CANCELLING = 'CANCELLING',
+  CANCELLED = 'CANCELLED',
 }
+
+/**
+ * Convert a string to a {@link JobState} if possible. Case-insensitive.
+ * 
+ * @param maybeState An optional string.
+ * @returns The corresponding {@link JobState} if one exists, otherwise undefined.
+ */
+export const parseJobState = (maybeState: string | undefined): JobState | undefined => {
+  if (maybeState === undefined) {
+    // Simplifies using the method with possibly-optional values.
+    return undefined;
+  }
+  maybeState = maybeState.toUpperCase();
+  return Object.values(JobState).find((state) => state === maybeState);
+};
 
 export interface AsyncQueryContext {
   query_id: string;
-  query_status: SparkJobState;
+  query_status: EmrJobState;
 }
 declare module '../../../src/plugins/ui_actions/public' {
   export interface TriggerContextMapping {
