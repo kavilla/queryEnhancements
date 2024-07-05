@@ -117,6 +117,7 @@ export class QueryEnhancementsPlugin
           searchBar: {
             showDatePicker: false,
             showFilterBar: false,
+            showDataSetsSelector: false,
             showDataSourceSelector: true,
             queryStringInput: { initialValue: 'SELECT * FROM <data_source>' },
           },
