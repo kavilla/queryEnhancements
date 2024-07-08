@@ -89,7 +89,7 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
 
     const onPollingSuccess = (pollingResult: any) => {
       if (pollingResult) {
-        const status = parseJobState(pollingResult.body.meta.status);
+        const status = parseJobState(pollingResult.body.meta.status)!;
         switch (status) {
           case JobState.SUCCESS:
             return false;
