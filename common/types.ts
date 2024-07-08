@@ -37,8 +37,7 @@ export enum JobState {
  * @returns The corresponding {@link JobState} if one exists, otherwise undefined.
  */
 export const parseJobState = (maybeState: string | undefined): JobState | undefined => {
-  if (maybeState === undefined) {
-    // Simplifies using the method with possibly-optional values.
+  if (!maybeState) {
     return undefined;
   }
   maybeState = maybeState.toUpperCase();
