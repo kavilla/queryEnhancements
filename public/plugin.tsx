@@ -8,8 +8,9 @@ import { Trigger } from 'src/plugins/ui_actions/public';
 import { CoreSetup, CoreStart, Plugin, PluginInitializerContext } from '../../../src/core/public';
 import { IStorageWrapper, Storage } from '../../../src/plugins/opensearch_dashboards_utils/public';
 import { ConfigSchema } from '../common/config';
+import { ConnectionsService, createDataSourceConnectionExtension } from './data_source_connection';
 import { createQueryAssistExtension } from './query_assist';
-import { PPLSearchInterceptor, SQLSearchInterceptor, SQLAsyncSearchInterceptor } from './search';
+import { PPLSearchInterceptor, SQLAsyncSearchInterceptor, SQLSearchInterceptor } from './search';
 import { setData, setStorage } from './services';
 import {
   QueryEnhancementsPluginSetup,
@@ -20,7 +21,6 @@ import {
 import { ASYNC_TRIGGER_ID } from '../common';
 
 export type PublicConfig = Pick<ConfigSchema, 'queryAssist'>;
-import { ConnectionsService, createDataSourceConnectionExtension } from './data_source_connection';
 
 export class QueryEnhancementsPlugin
   implements
@@ -154,7 +154,11 @@ export class QueryEnhancementsPlugin
 
     data.__enhance({
       ui: {
-        queryEditorExtension: createQueryAssistExtension(core.http, this.config.queryAssist),
+        queryEditorExtension: createQueryAssistExtension(
+          core.http,
+          this.connectionsService,
+          this.config.queryAssist
+        ),
       },
     });
 
