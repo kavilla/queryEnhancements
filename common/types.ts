@@ -32,7 +32,7 @@ export enum JobState {
 
 /**
  * Convert a string to a {@link JobState} if possible. Case-insensitive.
- * 
+ *
  * @param maybeState An optional string.
  * @returns The corresponding {@link JobState} if one exists, otherwise undefined.
  */
@@ -47,7 +47,7 @@ export const parseJobState = (maybeState: string | undefined): JobState | undefi
 
 export interface AsyncQueryContext {
   query_id: string;
-  query_status: EmrJobState;
+  query_status: JobState;
 }
 declare module '../../../src/plugins/ui_actions/public' {
   export interface TriggerContextMapping {
