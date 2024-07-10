@@ -8,6 +8,7 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { i18n } from '@osd/i18n';
 import { concatMap, map } from 'rxjs/operators';
 import { UiActionsStart } from 'src/plugins/ui_actions/public';
+import uuid from 'uuid';
 import {
   DATA_FRAME_TYPES,
   DataPublicPluginStart,
@@ -86,11 +87,18 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
         }),
       },
     };
+    const queryId = uuid();
 
     const onPollingSuccess = (pollingResult: any) => {
       if (pollingResult) {
-        const status = parseJobState(pollingResult.body.meta.status)!;
-        switch (status) {
+        const queryStatus = parseJobState(pollingResult.body.meta.status)!;
+
+        this.uiActions.getTrigger(ASYNC_TRIGGER_ID).exec({
+          queryId,
+          queryStatus,
+        });
+
+        switch (queryStatus) {
           case JobState.SUCCESS:
             return false;
           case JobState.FAILED:
@@ -103,10 +111,6 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
             });
             return false;
           default:
-            this.uiActions.getTrigger(ASYNC_TRIGGER_ID).exec({
-              query_id: request.params.progress_query_id,
-              query_status: status,
-            });
         }
       }
 

@@ -16,16 +16,14 @@ export interface FetchDataFrameContext {
 export type FetchFunction<T, P = void> = (params?: P) => Observable<T>;
 
 /**
- * Job states are defined for compatibility with EMR job run states, but aren't strictly limited to
- * that use. See also: {@link parseJobState}.
+ * Job states are defined to mostly be compatible with EMR job run states, but aren't strictly
+ * limited to that use. "PENDING" has been replaced with "WAITING", since the underlying async API
+ * seems to use this state instead. See also: {@link parseJobState}.
  */
 export enum JobState {
-  // The initial job state when you submit a job run to EMR Serverless. The job waits to be
-  // scheduled for the application. EMR Serverless begins to prioritize and schedule the job run. 
   SUBMITTED = 'SUBMITTED',
-  // The scheduler is evaluating the job run to prioritize and schedule the run for the application.
-  PENDING = 'PENDING',
-  SCHEDULED = 'SCHEDULING',
+  WAITING = 'WAITING',
+  SCHEDULED = 'SCHEDULED',
   RUNNING = 'RUNNING',
   FAILED = 'FAILED',
   SUCCESS = 'SUCCESS',
@@ -48,8 +46,8 @@ export const parseJobState = (maybeState: string | undefined): JobState | undefi
 };
 
 export interface AsyncQueryContext {
-  query_id: string;
-  query_status: JobState;
+  queryId: string;
+  queryStatus: JobState;
 }
 declare module '../../../src/plugins/ui_actions/public' {
   export interface TriggerContextMapping {
