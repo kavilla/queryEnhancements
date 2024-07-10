@@ -20,7 +20,10 @@ export type FetchFunction<T, P = void> = (params?: P) => Observable<T>;
  * that use. See also: {@link parseJobState}.
  */
 export enum JobState {
+  // The initial job state when you submit a job run to EMR Serverless. The job waits to be
+  // scheduled for the application. EMR Serverless begins to prioritize and schedule the job run. 
   SUBMITTED = 'SUBMITTED',
+  // The scheduler is evaluating the job run to prioritize and schedule the run for the application.
   PENDING = 'PENDING',
   SCHEDULED = 'SCHEDULING',
   RUNNING = 'RUNNING',

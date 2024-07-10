@@ -46,4 +46,4 @@ export const UI_SETTINGS = {};
 
 export const ERROR_DETAILS = { GUARDRAILS_TRIGGERED: 'guardrails triggered' };
 
-export const ASYNC_TRIGGER_ID = 'queryenhancements_async_query_interceptor_trigger';
+export const ASYNC_TRIGGER_ID = 'async_query_status_trigger';

@@ -103,12 +103,10 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
             });
             return false;
           default:
-            if (request.params?.progress_query_id) {
-              this.uiActions.getTrigger(ASYNC_TRIGGER_ID).exec({
-                query_id: request.params.progress_query_id,
-                query_status: status,
-              });
-            }
+            this.uiActions.getTrigger(ASYNC_TRIGGER_ID).exec({
+              query_id: request.params.progress_query_id,
+              query_status: status,
+            });
         }
       }
 
