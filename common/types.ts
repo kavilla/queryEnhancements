@@ -32,17 +32,19 @@ export enum JobState {
 }
 
 /**
- * Convert a string to a {@link JobState} if possible. Case-insensitive.
+ * Convert a string to a {@link JobState} if possible. Case-insensitive. Returns `null` for
+ * invalid strings or non-strings.
  *
  * @param maybeState An optional string.
- * @returns The corresponding {@link JobState} if one exists, otherwise undefined.
+ * @returns The corresponding {@link JobState} if one exists, otherwise null.
  */
-export const parseJobState = (maybeState: string | undefined): JobState | undefined => {
-  if (!maybeState) {
-    return undefined;
+export const parseJobState = (maybeState: unknown): JobState | null => {
+  if (!maybeState || typeof maybeState !== 'string') {
+    return null;
   }
   maybeState = maybeState.toUpperCase();
-  return Object.values(JobState).find((state) => state === maybeState);
+  const result = Object.values(JobState).find((state) => state === maybeState);
+  return result ?? null;
 };
 
 export interface AsyncQueryContext {
