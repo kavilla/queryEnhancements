@@ -10,6 +10,7 @@ export const BASE_API = '/api/enhancements';
 
 export const SEARCH_STRATEGY = {
   PPL: 'ppl',
+  PPL_ASYNC: 'pplasync',
   SQL: 'sql',
   SQL_ASYNC: 'sqlasync',
 };
@@ -17,6 +18,7 @@ export const SEARCH_STRATEGY = {
 export const API = {
   SEARCH: `${BASE_API}/search`,
   PPL_SEARCH: `${BASE_API}/search/${SEARCH_STRATEGY.PPL}`,
+  PPL_ASYNC_SEARCH: `${BASE_API}/search/${SEARCH_STRATEGY.PPL_ASYNC}`,
   SQL_SEARCH: `${BASE_API}/search/${SEARCH_STRATEGY.SQL}`,
   SQL_ASYNC_SEARCH: `${BASE_API}/search/${SEARCH_STRATEGY.SQL_ASYNC}`,
   QUERY_ASSIST: {
@@ -45,3 +47,5 @@ export const OPENSEARCH_API = {
 export const UI_SETTINGS = {};
 
 export const ERROR_DETAILS = { GUARDRAILS_TRIGGERED: 'guardrails triggered' };
+
+export const ASYNC_TRIGGER_ID = 'async_query_status_trigger';

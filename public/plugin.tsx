@@ -4,6 +4,7 @@
  */
 
 import moment from 'moment';
+import { Trigger } from 'src/plugins/ui_actions/public';
 import { CoreSetup, CoreStart, Plugin, PluginInitializerContext } from '../../../src/core/public';
 import { IStorageWrapper, Storage } from '../../../src/plugins/opensearch_dashboards_utils/public';
 import { ConfigSchema } from '../common/config';
@@ -17,6 +18,10 @@ import {
   QueryEnhancementsPluginStart,
   QueryEnhancementsPluginStartDependencies,
 } from './types';
+import { ASYNC_TRIGGER_ID } from '../common';
+import { PPLAsyncSearchInterceptor } from './search/ppl_async_search_interceptor';
+
+export type PublicConfig = Pick<ConfigSchema, 'queryAssist'>;
 
 export class QueryEnhancementsPlugin
   implements
@@ -37,11 +42,12 @@ export class QueryEnhancementsPlugin
 
   public setup(
     core: CoreSetup<QueryEnhancementsPluginStartDependencies>,
-    { data }: QueryEnhancementsPluginSetupDependencies
+    { data, uiActions }: QueryEnhancementsPluginSetupDependencies
   ): QueryEnhancementsPluginSetup {
     this.connectionsService = new ConnectionsService({
       startServices: core.getStartServices(),
       http: core.http,
+      uiActions,
     });
 
     const pplSearchInterceptor = new PPLSearchInterceptor(
@@ -51,6 +57,19 @@ export class QueryEnhancementsPlugin
         uiSettings: core.uiSettings,
         startServices: core.getStartServices(),
         usageCollector: data.search.usageCollector,
+        uiActions,
+      },
+      this.connectionsService
+    );
+
+    const pplAsyncSearchInterceptor = new PPLAsyncSearchInterceptor(
+      {
+        toasts: core.notifications.toasts,
+        http: core.http,
+        uiSettings: core.uiSettings,
+        startServices: core.getStartServices(),
+        usageCollector: data.search.usageCollector,
+        uiActions,
       },
       this.connectionsService
     );
@@ -62,6 +81,7 @@ export class QueryEnhancementsPlugin
         uiSettings: core.uiSettings,
         startServices: core.getStartServices(),
         usageCollector: data.search.usageCollector,
+        uiActions,
       },
       this.connectionsService
     );
@@ -73,6 +93,7 @@ export class QueryEnhancementsPlugin
         uiSettings: core.uiSettings,
         startServices: core.getStartServices(),
         usageCollector: data.search.usageCollector,
+        uiActions,
       },
       this.connectionsService
     );
@@ -104,13 +125,34 @@ export class QueryEnhancementsPlugin
     data.__enhance({
       ui: {
         query: {
+          language: 'PPLAsync',
+          search: pplAsyncSearchInterceptor,
+          searchBar: {
+            showDatePicker: false,
+            showFilterBar: false,
+            showDataSourceSelector: true,
+            queryStringInput: { initialValue: 'source = <data_source>' },
+          },
+          fields: {
+            filterable: false,
+            visualizable: false,
+          },
+          showDocLinks: false,
+          supportedAppNames: ['discover'],
+        },
+      },
+    });
+
+    data.__enhance({
+      ui: {
+        query: {
           language: 'SQL',
           search: sqlSearchInterceptor,
           searchBar: {
             showDatePicker: false,
             showFilterBar: false,
             showDataSetsSelector: false,
-            showDataSourcesSelector: true,
+            showDataSourceSelector: true,
             queryStringInput: { initialValue: 'SELECT * FROM <data_source>' },
           },
           fields: {
@@ -131,8 +173,7 @@ export class QueryEnhancementsPlugin
           searchBar: {
             showDatePicker: false,
             showFilterBar: false,
-            showDataSetsSelector: false,
-            showDataSourcesSelector: true,
+            showDataSourceSelector: true,
             queryStringInput: { initialValue: 'SHOW DATABASES IN ::mys3::' },
           },
           fields: {
@@ -163,6 +204,11 @@ export class QueryEnhancementsPlugin
         ),
       },
     });
+
+    const ASYNC_TRIGGER: Trigger<typeof ASYNC_TRIGGER_ID> = {
+      id: ASYNC_TRIGGER_ID,
+    };
+    uiActions.registerTrigger(ASYNC_TRIGGER);
 
     return {};
   }

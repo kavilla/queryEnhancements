@@ -1,3 +1,8 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { sqlSearchStrategyProvider } from './sql_search_strategy';
 import { Observable, of } from 'rxjs';
 import {
