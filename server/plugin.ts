@@ -27,6 +27,7 @@ import {
   QueryEnhancementsPluginStart,
 } from './types';
 import { OpenSearchObservabilityPlugin, OpenSearchPPLPlugin } from './utils';
+import { pplAsyncSearchStrategyProvider } from './search/ppl_async_search_strategy';
 
 export class QueryEnhancementsPlugin
   implements Plugin<QueryEnhancementsPluginSetup, QueryEnhancementsPluginStart> {
@@ -57,8 +58,14 @@ export class QueryEnhancementsPlugin
       this.logger,
       client
     );
+    const pplAsyncSearchStrategy = pplAsyncSearchStrategyProvider(
+      this.config$,
+      this.logger,
+      client
+    );
 
     data.search.registerSearchStrategy(SEARCH_STRATEGY.PPL, pplSearchStrategy);
+    data.search.registerSearchStrategy(SEARCH_STRATEGY.PPL_ASYNC, pplAsyncSearchStrategy);
     data.search.registerSearchStrategy(SEARCH_STRATEGY.SQL, sqlSearchStrategy);
     data.search.registerSearchStrategy(SEARCH_STRATEGY.SQL_ASYNC, sqlAsyncSearchStrategy);
 

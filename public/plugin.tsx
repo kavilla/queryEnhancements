@@ -19,6 +19,7 @@ import {
   QueryEnhancementsPluginStartDependencies,
 } from './types';
 import { ASYNC_TRIGGER_ID } from '../common';
+import { PPLAsyncSearchInterceptor } from './search/ppl_async_search_interceptor';
 
 export type PublicConfig = Pick<ConfigSchema, 'queryAssist'>;
 
@@ -50,6 +51,18 @@ export class QueryEnhancementsPlugin
     });
 
     const pplSearchInterceptor = new PPLSearchInterceptor(
+      {
+        toasts: core.notifications.toasts,
+        http: core.http,
+        uiSettings: core.uiSettings,
+        startServices: core.getStartServices(),
+        usageCollector: data.search.usageCollector,
+        uiActions,
+      },
+      this.connectionsService
+    );
+
+    const pplAsyncSearchInterceptor = new PPLAsyncSearchInterceptor(
       {
         toasts: core.notifications.toasts,
         http: core.http,
@@ -104,6 +117,27 @@ export class QueryEnhancementsPlugin
             filterable: false,
             visualizable: false,
           },
+          supportedAppNames: ['discover'],
+        },
+      },
+    });
+
+    data.__enhance({
+      ui: {
+        query: {
+          language: 'PPLAsync',
+          search: pplAsyncSearchInterceptor,
+          searchBar: {
+            showDatePicker: false,
+            showFilterBar: false,
+            showDataSourceSelector: true,
+            queryStringInput: { initialValue: 'source = <data_source>' },
+          },
+          fields: {
+            filterable: false,
+            visualizable: false,
+          },
+          showDocLinks: false,
           supportedAppNames: ['discover'],
         },
       },
