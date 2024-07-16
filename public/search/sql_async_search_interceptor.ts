@@ -88,6 +88,12 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
       },
     };
     const queryId = uuid();
+    // Send an initial submit event to get faster feedback to clients waiting for info, since
+    // polling will wait for the first polling cycle to finish before sending anything
+    this.uiActions.getTrigger(ASYNC_TRIGGER_ID).exec({
+      queryId,
+      queryStatus: JobState.SUBMITTED,
+    });
 
     const onPollingSuccess = (pollingResult: any) => {
       if (pollingResult) {
@@ -113,12 +119,6 @@ export class SQLAsyncSearchInterceptor extends SearchInterceptor {
           default:
         }
       }
-
-      this.deps.toasts.addInfo({
-        title: i18n.translate('queryEnhancements.sqlQueryPolling', {
-          defaultMessage: 'Polling query job results...',
-        }),
-      });
 
       return true;
     };
