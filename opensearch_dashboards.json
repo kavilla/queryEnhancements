@@ -4,7 +4,7 @@
   "opensearchDashboardsVersion": "opensearchDashboards",
   "server": true,
   "ui": true,
-  "requiredPlugins": ["data"],
+  "requiredPlugins": ["data", "savedObjects"],
   "optionalPlugins": ["dataSource", "dataSourceManagement"],
   "requiredBundles": ["opensearchDashboardsUtils", "opensearchDashboardsReact", "dataSourceManagement"]
 }

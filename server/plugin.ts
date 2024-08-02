@@ -11,6 +11,9 @@ import {
   Logger,
   Plugin,
   PluginInitializerContext,
+  SavedObjectTypeRegistry,
+  SavedObjectsClient,
+  SavedObjectsSerializer,
   SharedGlobalConfig,
 } from '../../../src/core/server';
 import { SEARCH_STRATEGY } from '../common';
@@ -27,6 +30,7 @@ import {
   QueryEnhancementsPluginStart,
 } from './types';
 import { OpenSearchObservabilityPlugin, OpenSearchPPLPlugin } from './utils';
+import { ExternalSavedObjectsRepository } from './saved_objects/external_repository';
 
 export class QueryEnhancementsPlugin
   implements Plugin<QueryEnhancementsPluginSetup, QueryEnhancementsPluginStart> {
@@ -84,6 +88,37 @@ export class QueryEnhancementsPlugin
       ppl: pplSearchStrategy,
       sql: sqlSearchStrategy,
       sqlasync: sqlAsyncSearchStrategy,
+    });
+
+    const typeRegistry = new SavedObjectTypeRegistry();
+    const externalSavedObjectsRepo = new ExternalSavedObjectsRepository({
+      index: '.ql-datasources',
+      mappings: {
+        dynamic: false,
+        properties: {
+          name: { type: 'text' },
+          fields: {
+            type: 'nested',
+            properties: {
+              type: { type: 'keyword' },
+              connector: { type: 'keyword' },
+              resultIndex: { type: 'keyword' },
+              status: { type: 'keyword' },
+            },
+          },
+        },
+      },
+      client,
+      typeRegistry,
+      serializer: new SavedObjectsSerializer(typeRegistry),
+      // migrator,
+      // allowedTypes: ['datasource'],
+      allowedTypes: ['datasource', 'config'],
+    });
+
+    const qlSavedObjectsClient = new SavedObjectsClient(externalSavedObjectsRepo);
+    core.savedObjects.addClientWrapper(0, 'ql_datasources', () => {
+      return qlSavedObjectsClient;
     });
 
     this.logger.info('queryEnhancements: Setup complete');
